@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jokes-fe-deployment
+  namespace: jokes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jokes-fe
+  template:
+    metadata:
+      labels:
+        app: jokes-fe
+    spec: 
+      automountServiceAccountToken: false
+      containers:
+      - name: jokes-fe-container
+        securityContext:
+          runAsNonRoot: false 
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: false
+        image: jokeserviceacr.azurecr.io/frontend_ms:v3.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: 200m
+            memory: 400Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+      imagePullSecrets:
+      - name: acr-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: jokes
+spec:
+  selector:
+    app: jokes-fe
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

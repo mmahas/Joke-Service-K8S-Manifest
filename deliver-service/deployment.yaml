@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deliver-deployment
+  namespace: jokes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deliver-ms
+  template:
+    metadata:
+      labels:
+        app: deliver-ms
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: deliver-ms-container
+        image: jokeserviceacr.azurecr.io/deliver_ms:v2.0
+        volumeMounts:
+        - name: application-logs
+          mountPath: /logs
+        - name: tmp
+          mountPath: /tmp
+        securityContext:
+          runAsNonRoot: false
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: false
+        ports:
+        - containerPort: 8002
+        resources:
+          limits:
+            cpu: 100m
+            memory: 400Mi
+          requests:
+            cpu: 50m
+            memory: 200Mi
+      imagePullSecrets:
+      - name: acr-secret
+      volumes:
+      - name: application-logs
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deliver-service
+  namespace: jokes
+spec:
+  selector:
+    app: deliver-ms
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8002
+  type: ClusterIP
