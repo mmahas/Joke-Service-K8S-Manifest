@@ -28,6 +28,8 @@ spec:
           allowPrivilegeEscalation: false
         ports:
         - containerPort: 8000
+          name: submit
+          protocol: TCP
         resources:
           limits:
             cpu: 100m
@@ -46,13 +48,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: submit-service
+  name: submitservice
   namespace: jokes
 spec:
   selector:
     app: submit-ms
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8000
+    - port: 8000
+      name: submit
   type: ClusterIP
